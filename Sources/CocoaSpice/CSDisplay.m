@@ -87,6 +87,17 @@ static void cs_primary_create(SpiceChannel *channel, gint format,
     self.canvasData = imgdata;
     
     cs_update_monitor_area(channel, NULL, data);
+
+    /* AVM fix (initial-fill race): if geometry and the Metal device were
+     * already known, the canvas texture may have been built before imgdata
+     * existed (empty, with no canvasBuffer), and nothing will ever rebuild
+     * it: monitors config is static on an agent-less guest and drawRegion
+     * no-ops while canvasBuffer is nil. Rebuild now that pixel data exists.
+     * No-op in healthy orderings (canvasBuffer already set). */
+    if (!self.isGLEnabled && self.device && !self.canvasBuffer &&
+        !CGRectIsEmpty(self.visibleArea)) {
+        [self rebuildCanvasTexture];
+    }
 }
 
 static void cs_primary_destroy(SpiceDisplayChannel *channel, gpointer data) {
@@ -121,7 +132,14 @@ static void cs_invalidate(SpiceChannel *channel,
     CGRect rect = CGRectIntersection(CGRectMake(x, y, w, h), self.visibleArea);
     g_assert(!self.isGLEnabled);
     if (!CGRectIsEmpty(rect)) {
-        if (!self.canvasIsBusy) {
+        /* AVM fix (self-heal): if the texture was built before canvasData
+         * existed, canvasBuffer is nil and drawRegion silently no-ops
+         * forever. Rebuild instead - it fills the whole visible area,
+         * a superset of rect. */
+        if (!self.canvasBuffer && self.canvasData && self.device &&
+            !CGRectIsEmpty(self.visibleArea)) {
+            [self rebuildCanvasTexture];
+        } else if (!self.canvasIsBusy) {
             [self drawRegion:rect];
         } else {
             self.canvasDirtyRect = CGRectUnion(self.canvasDirtyRect, rect);
