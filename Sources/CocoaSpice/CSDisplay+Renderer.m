@@ -31,7 +31,7 @@
 - (void)addRenderer:(id<CSRenderer>)renderer {
     NSArray<id<CSRenderer>> *renderers = self.renderers;
     NSLog(@"[AVM-EV] addRenderer display=%p hadDevice=%d priorRenderers=%lu",
-          (void *)self, self.device != nil, (unsigned long)renderers.count);
+          (__bridge void *)self, self.device != nil, (unsigned long)renderers.count);
     if (![renderers containsObject:renderer]) {
         self.renderers = [renderers arrayByAddingObject:renderer];
     }
