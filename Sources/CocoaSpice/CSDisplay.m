@@ -88,7 +88,7 @@ static void cs_primary_create(SpiceChannel *channel, gint format,
     
     cs_update_monitor_area(channel, NULL, data);
 
-    SPICE_DEBUG("[AVM-EV] primary_create self=%p device=%p buffer=%p data=%p visible=%.0fx%.0f gl=%d",
+    NSLog(@"[AVM-EV] primary_create self=%p device=%p buffer=%p data=%p visible=%.0fx%.0f gl=%d",
                 (__bridge void *)self, (__bridge void *)self.device, (__bridge void *)self.canvasBuffer,
                 self.canvasData, self.visibleArea.size.width, self.visibleArea.size.height,
                 self.isGLEnabled);
@@ -101,7 +101,7 @@ static void cs_primary_create(SpiceChannel *channel, gint format,
      * No-op in healthy orderings (canvasBuffer already set). */
     if (!self.isGLEnabled && self.device && !self.canvasBuffer &&
         !CGRectIsEmpty(self.visibleArea)) {
-        SPICE_DEBUG("[AVM-EV] primary_create REBUILD FIRED self=%p", (__bridge void *)self);
+        NSLog(@"[AVM-EV] primary_create REBUILD FIRED self=%p", (__bridge void *)self);
         [self rebuildCanvasTexture];
     }
 }
@@ -144,7 +144,7 @@ static void cs_invalidate(SpiceChannel *channel,
          * a superset of rect. */
         if (!self.canvasBuffer && self.canvasData && self.device &&
             !CGRectIsEmpty(self.visibleArea)) {
-            SPICE_DEBUG("[AVM-EV] invalidate SELF-HEAL FIRED self=%p", (__bridge void *)self);
+            NSLog(@"[AVM-EV] invalidate SELF-HEAL FIRED self=%p", (__bridge void *)self);
             [self rebuildCanvasTexture];
         } else if (!self.canvasIsBusy) {
             [self drawRegion:rect];
@@ -655,7 +655,7 @@ static void cs_gl_draw(SpiceDisplayChannel *channel,
 
 - (void)rebuildCanvasTexture {
     CGRect visibleArea = self.visibleArea;
-    SPICE_DEBUG("[AVM-EV] rebuild self=%p device=%p data=%p visible=%.0fx%.0f renderers=%lu",
+    NSLog(@"[AVM-EV] rebuild self=%p device=%p data=%p visible=%.0fx%.0f renderers=%lu",
                 (__bridge void *)self, (__bridge void *)self.device, self.canvasData,
                 visibleArea.size.width, visibleArea.size.height,
                 (unsigned long)self.renderers.count);
@@ -744,11 +744,11 @@ static void cs_gl_draw(SpiceDisplayChannel *channel,
 
 - (void)drawRegion:(CGRect)rect {
     if (!self.canvasData || !self.canvasBuffer) {
-        SPICE_DEBUG("[AVM-EV] drawRegion BAIL self=%p data=%p buffer=%p", (__bridge void *)self,
+        NSLog(@"[AVM-EV] drawRegion BAIL self=%p data=%p buffer=%p", (__bridge void *)self,
                     self.canvasData, (__bridge void *)self.canvasBuffer);
         return; // not ready to draw yet
     }
-    SPICE_DEBUG("[AVM-EV] drawRegion FILL self=%p renderers=%lu rect=%.0fx%.0f", (__bridge void *)self,
+    NSLog(@"[AVM-EV] drawRegion FILL self=%p renderers=%lu rect=%.0fx%.0f", (__bridge void *)self,
                 (unsigned long)self.renderers.count, rect.size.width, rect.size.height);
     self.canvasIsBusy = YES;
     NSInteger pixelSize = (self.canvasFormat == SPICE_SURFACE_FMT_32_xRGB) ? 4 : 2;
